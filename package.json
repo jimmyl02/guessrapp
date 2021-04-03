@@ -1,6 +1,17 @@
 {
    "private": true,
    "name": "guessrapp",
-   "workspaces": ["client", "server"],
-   "scripts": {}
+   "workspaces": [
+      "packages/*"
+   ],
+   "scripts": {
+      "build": "yarn workspaces run build && yarn mvfiles",
+      "mvfiles:server": "yarn copyfiles -u 1 \"packages/server/dist/*\" \"packages/server/dist/**/*\" dist",
+      "mvfiles:client": "yarn copyfiles -u 1 \"packages/client/build/*\" \"packages/client/build/**/*\" dist",
+      "mvfiles": "yarn mvfiles:server && yarn mvfiles:client"
+   },
+   "devDependencies": {
+      "copyfiles": "^2.4.1",
+      "cross-env": "^7.0.3"
+   }
 }

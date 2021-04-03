@@ -45,7 +45,7 @@ const Home = () => {
     const [roundScores, setRoundScores] = useState<ScoreTracker>({});
 
     const [gameStatus, setGameStatus] = useState(0);
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]); // possibly convert to ring buffer https://stackoverflow.com/questions/38362102/javascript-array-that-contains-only-last-n-elements
     const [messageValue, setMessageValue] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -66,7 +66,7 @@ const Home = () => {
     }
     const scrollToBottomMessage = (): void => {
         if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+            messagesEndRef.current.scrollIntoView({ behavior: 'auto' })
         }
     }
 
@@ -228,7 +228,7 @@ const Home = () => {
         }
 
         webSocket.current.onmessage = (e) => {
-            console.log(e.data); // DEBUG: Here for debugging, remove in final build
+            //console.log(e.data); // DEBUG: Here for debugging, remove in final build
             handleWebSocketMessage(e.data);
         }
 

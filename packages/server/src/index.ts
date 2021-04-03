@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
 
 dotenv.config();
 
@@ -18,10 +19,13 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Setup router
-app.use('/', router);
+app.use(router);
 
-router.all('*', (req, res) => {
-    res.status(404).send('Route not found');
+const staticPath = path.join(__dirname, '../../client/build');
+app.use(express.static(staticPath));
+
+app.all('*', function (req, res) {
+    res.sendFile(path.join(__dirname, '../../client/build/index.html'));
 });
 
 export const server = app.listen(8080, () => {
