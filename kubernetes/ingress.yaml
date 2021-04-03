@@ -1,0 +1,10 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: guessrapp-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "guessrapp-static-ip"
+spec:
+  backend:
+    serviceName: app
+    servicePort: 8080
