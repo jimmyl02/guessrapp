@@ -29,7 +29,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: app
-        image: us-west2-docker.pkg.dev/guessrapp/app/app:0.1
+        image: us-west2-docker.pkg.dev/guessrapp/app/app:0.2
         ports:
           - containerPort: 8080
         env:
