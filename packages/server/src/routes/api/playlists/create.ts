@@ -106,7 +106,7 @@ const handler = async (req: Request, res: Response): Promise<any> => { // eslint
                                     if (artists.length >= 1) {
                                         artistsString += artists[0]['name'];
                                         for (let i = 1; i < artists.length; i += 1) {
-                                            artistsString += artists[i]['name'];
+                                            artistsString += ', ' + artists[i]['name'];
                                         }
                                     }
 
