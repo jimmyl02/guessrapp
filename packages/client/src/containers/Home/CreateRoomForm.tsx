@@ -45,8 +45,8 @@ const CreateRoomForm = () => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: await JSON.stringify({ roomId: values.roomId, playlistUrl: values.playlistUrl, numRounds: values.numRounds,
-                roundLength: values.roundLength, replayLength: values.replayLength })
+            body: await JSON.stringify({ roomId: values.roomId, playlistUrl: values.playlistUrl, numRounds: Number(values.numRounds),
+                roundLength: Number(values.roundLength), replayLength: Number(values.replayLength) })
         });
         const parsedCreateRoomRequest = await createRoomRequest.json();
         if(parsedCreateRoomRequest.status && parsedCreateRoomRequest.status === 'success'){
@@ -58,7 +58,7 @@ const CreateRoomForm = () => {
                 position: 'top-right',
                 status: 'error',
                 isClosable: true,
-              })
+              });
             actions.setSubmitting(false);
         }
     };

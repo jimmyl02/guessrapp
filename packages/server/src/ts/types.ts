@@ -25,6 +25,8 @@ export interface WebSocketResponseData {
 
 export enum WebSocketResponseType {
     joinedRoom = 'joinedRoom',
+    leaveRoom = 'leaveRoom',
+    newPlayer = 'newPlayer',
     renderMessage = 'renderMessage',
     roundStart = 'roundStart',
     roundOver = 'roundOver',
@@ -36,9 +38,10 @@ export enum RedisPubSubMessageType { // using strings for now but might switch l
     // these messages are from client to node which need to be processed
     startGame = 'startGame',
     sendMessage = 'sendMessage',
-    leaveRoom = 'leaveRoom',
     // these messages are passed internally from host node to other nodes or represent actions for connection nodes
+    leaveRoom = 'leaveRoom',
     joinedRoom = 'joinedRoom',
+    newPlayer = 'newPlayer',
     renderMessage = 'renderMessage', // this is used to render the message itself
     scoreInfo = 'scoreInfo',
     roundStart = 'roundStart',

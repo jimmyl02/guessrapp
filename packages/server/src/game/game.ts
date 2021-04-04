@@ -126,11 +126,19 @@ export const startGame = async (roomId: string): Promise<void> => {
             } else {
                 // game is over, stop ticker and pub gameOver message
                 ticker.stop();
+                await client.hset(roomKey, 'gameStatus', GameStatus.lobby);
                 const redisMessage: RedisPubSubMessage = {
                     type: RedisPubSubMessageType.gameOver
                 }
-                await client.hset(roomKey, 'gameStatus', GameStatus.lobby);
                 await client.publish(roomId, await JSON.stringify(redisMessage));
+                const redisMessage2: RedisPubSubMessage = {
+                    type: RedisPubSubMessageType.renderMessage,
+                    data: {
+                        info: true,
+                        text: 'Game over!'
+                    }
+                }
+                await client.publish(roomId, await JSON.stringify(redisMessage2));
             }
         }
     }

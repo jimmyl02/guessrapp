@@ -40,6 +40,18 @@ const schema = {
 
 const validate = ajv.compile(schema);
 
+const filterName = (name: string): string => {
+    const openParenIdx = name.indexOf(' (');
+    if (openParenIdx != -1) {
+        name = name.substr(0, openParenIdx);
+    }
+    const beginDashIdx = name.indexOf(' -');
+    if (beginDashIdx != -1) {
+        name = name.substr(0, beginDashIdx);
+    }
+    return name;
+}
+
 /**
  * /api/playlists/create
  * Handles creating playlists and updating them if the snapshot id has changed
@@ -89,11 +101,18 @@ const handler = async (req: Request, res: Response): Promise<any> => { // eslint
                             for (const trackObj of tracks) {
                                 const track = trackObj['track'];
                                 if (track['preview_url']) {
+                                    const artists = track['artists'];
                                     let artistsString = '';
-                                    track['artists'].forEach((artist) => {
-                                        artistsString += artist['name'];
-                                    });
-                                    await db.songs.insertNewSong(playlistId, track['name'], artistsString, track['album']['images'][0]['url'], track['preview_url']);
+                                    if (artists.length >= 1) {
+                                        artistsString += artists[0]['name'];
+                                        for (let i = 1; i < artists.length; i += 1) {
+                                            artistsString += artists[i]['name'];
+                                        }
+                                    }
+
+                                    const filteredName = filterName(track['name']);
+
+                                    await db.songs.insertNewSong(playlistId, filteredName, artistsString, track['album']['images'][0]['url'], track['preview_url']);
                                 }
                             }
 

@@ -122,8 +122,35 @@ const Home = () => {
                     } else {
                         // already ingame
                         setDisabledStartGame(true);
-                        // TODO: Handle joining mid game
+                        const currentTotalScore: ScoreTracker = {};
+                        for (const username of Object.keys(data['totalScores'])) {
+                            currentTotalScore[username] = Number(data['totalScores'][username]);
+                        }
+                        setTotalScores(currentTotalScore);
+                        const currentRoundScore: ScoreTracker = {};
+                        for (const username of Object.keys(data['roundScores'])) {
+                            currentRoundScore[username] = Number(data['roundScores'][username]);
+                        }
+                        setRoundScores(currentRoundScore);
                     }
+                    break;
+                }
+                case 'leaveRoom': {
+                    const targetUsername = data;
+                    setTotalScores((oldTotalScores) => {
+                        const newTotalScores: ScoreTracker = {};
+                        for (const username of Object.keys(oldTotalScores)) {
+                            if (username != targetUsername) {
+                                newTotalScores[username] = oldTotalScores[username];
+                            }
+                        }
+                        return newTotalScores;
+                    });
+                    break;
+                }
+                case 'newPlayer': {
+                    const targetUsername = data;
+                    setTotalScores((oldTotalScores) => ({...oldTotalScores, [targetUsername]: 0}));
                     break;
                 }
                 case 'roundStart': {
@@ -131,16 +158,17 @@ const Home = () => {
                     setRoundScores({});
                     setDisabledStartGame(true);
 
-                    setTotalScores((oldInitialTotalScore) => {
-                        const clearedTotalScores: ScoreTracker = {};
-                        for (const username of Object.keys(oldInitialTotalScore)) {
-                            clearedTotalScores[username] = 0;
+                    setRoundScores((oldInitialRoundScore) => {
+                        const clearedRoundScores: ScoreTracker = {};
+                        for (const username of Object.keys(oldInitialRoundScore)) {
+                            clearedRoundScores[username] = 0;
                         }
-                        return clearedTotalScores;
+                        return clearedRoundScores;
                     });
 
                     if (audioElem.current) {
                         audioElem.current.src = data;
+                        audioElem.current.volume = 0.1;
                         audioElem.current.play();
                     }
                     break;
@@ -163,7 +191,7 @@ const Home = () => {
                     const roundScore = data['score'];
 
                     setRoundScores((oldRoundScores) => ({...oldRoundScores, [targetUsername]: roundScore}));
-                    setTotalScores((oldTotalScores) => ({...oldTotalScores, [targetUsername]: Number(roundScore) + Number(oldTotalScores[targetUsername])}));
+                    setTotalScores((oldTotalScores) => ({...oldTotalScores, [targetUsername]: Number(roundScore) + (isNaN(oldTotalScores[targetUsername]) ? 0 : Number(oldTotalScores[targetUsername]))}));
                     break;
                 }
                 case 'gameOver': {
@@ -244,6 +272,16 @@ const Home = () => {
         }
     }, [isConnected, roomId, username]);
 
+    useEffect(() => {
+        // Heartbeat to keep connection alive through CF
+        const interval = setInterval(() => {
+            if (webSocket.current && webSocket.current.readyState === WebSocket.OPEN) {
+                webSocket.current.send('{"type": "heartbeat"}');
+            }
+        }, 10000);
+        return () => clearInterval(interval);
+      }, []);
+
     return (
         <Box color='gray.700'>
             <audio id="audioSpectrumTarget"
@@ -265,10 +303,10 @@ const Home = () => {
                     <Flex flexDirection='column' height='100%' borderWidth='1px' borderRadius='lg' position='relative'>
                         <Heading size='md' marginTop={3} marginLeft={4} marginBottom={4}>Total Scores</Heading>
                         <Box overflow='auto'>
-                            <Stack>
+                            <Stack spacing={4}>
                                 {Object.keys(totalScores).map((username: string) => {
                                     return (
-                                        <Box key={username} marginBottom={4}>
+                                        <Box key={username}>
                                             <Text marginLeft={4} display='inline-block' float='left'
                                                 overflow='hidden' textOverflow='ellipsis' maxWidth='70%'
                                                 whiteSpace='nowrap'>{username}</Text>
@@ -279,7 +317,7 @@ const Home = () => {
                             </Stack>
                         </Box>
                         <Button size='md' width='100%' alignSelf='flex-end' minHeight={10} 
-                            onClick={() => startGame()} isDisabled={disabledStartGame}>Start Game</Button>
+                            onClick={() => startGame()} isDisabled={disabledStartGame} marginTop={4}>Start Game</Button>
                     </Flex>
                 </GridItem>
                 <GridItem colSpan={6} rowStart={2} rowEnd={12} bg="">
@@ -287,10 +325,10 @@ const Home = () => {
                         <Box overflow='auto'>
                             <Container marginTop={4} marginBottom={4}>
                                 {displaySongCard && <SongCard name={(songInfo as SongInfo).name} artists={(songInfo as SongInfo).artists} imageUrl={(songInfo as SongInfo).imageUrl} />}
-                                <Stack>
+                                <Stack spacing={4}>
                                     {Object.keys(roundScores).map((username: string) => {
                                         return (
-                                            <Box key={username} marginBottom={4}>
+                                            <Box key={username}>
                                                 <Text marginLeft={4} display='inline-block' float='left'
                                                     overflow='hidden' textOverflow='ellipsis' maxWidth='70%'
                                                     whiteSpace='nowrap' size='md'>{username}</Text>

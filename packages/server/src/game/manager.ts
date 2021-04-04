@@ -152,11 +152,22 @@ subClient.on('message', async (channel, message) => {
     if (targetWebSockets) {
         // we have clients connected from target roomId
         switch (type) {
-            case RedisPubSubMessageType.joinedRoom: {
+            case RedisPubSubMessageType.leaveRoom: {
+                // handler which forwards leaveRoom event
+                for (const ws of targetWebSockets) {
+                    const messageData: WebSocketResponseData = {
+                        type: WebSocketResponseType.leaveRoom,
+                        data: data
+                    }
+                    await sendSuccess(ws, messageData);
+                }
+                break;
+            }
+            case RedisPubSubMessageType.newPlayer: {
                 // handler which forwards joinedRoom action with username as data
                 for (const ws of targetWebSockets) {
                     const messageData: WebSocketResponseData = {
-                        type: WebSocketResponseType.joinedRoom,
+                        type: WebSocketResponseType.newPlayer,
                         data: data
                     }
                     await sendSuccess(ws, messageData);
@@ -261,7 +272,7 @@ wsServer.on('connection', (ws) => {
                                             roomId = requestedRoomId;
                                             
                                             const redisMessage: RedisJoinRoomMessage = {
-                                                type: RedisPubSubMessageType.joinedRoom,
+                                                type: RedisPubSubMessageType.newPlayer,
                                                 data: username
                                             }
                                             await client.publish(roomId, await JSON.stringify(redisMessage));
@@ -283,13 +294,15 @@ wsServer.on('connection', (ws) => {
                                             const gameStatus = <GameStatus>Number(await client.hget('games:room-' + roomId, 'gameStatus'));
                                             const totalScores = await client.hgetall('games:scores:room-' + roomId);
                                             const roundScores = await client.hgetall('games:round-scores:room-' + roomId);
+                                            const playlistId = await client.hget('games:room-' + roomId, 'playlistId');
                                             const messageData: WebSocketResponseData = {
                                                 type: WebSocketResponseType.joinedRoom,
                                                 data: {
                                                     connectedUsers: connectedUsers,
                                                     gameStatus: gameStatus,
                                                     totalScores: totalScores,
-                                                    roundScores: roundScores
+                                                    roundScores: roundScores,
+                                                    playlistId: playlistId
                                                 }
                                             }
                                             await sendSuccess(ws, messageData);
@@ -363,17 +376,8 @@ wsServer.on('connection', (ws) => {
                     }
                     case 'leaveRoom': {
                         if (roomId) {
-                            // remove ws from tracked websockets by room; if empty after remove, remove from currentlyHostedRooms
-                            const targetSocketClients = webSocketClients[roomId];
-                            webSocketClients[roomId] = targetSocketClients.filter((trackedWs) => {
-                                trackedWs != ws;
-                            });
-
-                            // publish notification that user left the room
-                            const redisMessage: RedisPubSubMessage = {
-                                type: RedisPubSubMessageType.leaveRoom,
-                            }
-                            await client.publish(roomId, await JSON.stringify(redisMessage));
+                            // close websocket
+                            ws.close();
                         } else {
                             await sendError(ws, 'not in a room');
                         }
@@ -392,14 +396,19 @@ wsServer.on('connection', (ws) => {
             // remove ws from tracked websockets by room; if empty after remove, remove from currentlyHostedRooms
             const targetSocketClients = webSocketClients[roomId];
             webSocketClients[roomId] = targetSocketClients.filter((trackedWs) => {
-                trackedWs != ws;
+                // Essentially get rid of all closed or closing web sockets, was broken previously
+                return (trackedWs.readyState != WebSocket.CLOSED && trackedWs.readyState != WebSocket.CLOSING);
             });
 
             // publish notification that user left the room
             const redisMessage: RedisPubSubMessage = {
                 type: RedisPubSubMessageType.leaveRoom,
+                data: username
             }
             await client.publish(roomId, await JSON.stringify(redisMessage));
+
+            // remove user from game room
+            await client.srem('games:users:room-' + roomId, username);
         }
     });
 });
