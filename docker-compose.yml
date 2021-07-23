@@ -12,10 +12,10 @@ services:
       POSTGRES_PASSWORD: REPLACEME
     volumes:
       - pgdata:/var/lib/postgresql/data:rw
-    ports:
+    ports: # this can be removed after initial migrations
       - "5432:5432"
   app:
-    build: ./app
+    build: ./ # or image: jimmyl02/guessrapp:latest
     cpus: 0.75
     mem_limit: 400M
     environment:
@@ -30,3 +30,6 @@ services:
     restart: always
     ports:
         - "80:8080"
+
+volumes: 
+  pgdata:
