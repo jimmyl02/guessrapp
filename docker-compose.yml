@@ -1,0 +1,32 @@
+version: "2.2"
+
+services:
+  redis:
+    image: redis
+    mem_limit: 100M
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: guessrapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: REPLACEME
+    volumes:
+      - pgdata:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+  app:
+    build: ./app
+    cpus: 0.75
+    mem_limit: 400M
+    environment:
+        - DATABASE_URL=REPLACEME
+        - REDIS_URL=REPLACEME
+        - SPOTIFY_CLIENT_ID=REPLACEME
+        - SPOTIFY_CLIENT_SECRET=REPLACEME
+        - ORIGIN=REPLACEME
+    depends_on:
+      - redis
+      - postgres
+    restart: always
+    ports:
+        - "80:8080"

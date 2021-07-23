@@ -140,7 +140,7 @@ const Home = () => {
                     setTotalScores((oldTotalScores) => {
                         const newTotalScores: ScoreTracker = {};
                         for (const username of Object.keys(oldTotalScores)) {
-                            if (username != targetUsername) {
+                            if (username !== targetUsername) {
                                 newTotalScores[username] = oldTotalScores[username];
                             }
                         }
