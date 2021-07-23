@@ -13,7 +13,7 @@ export const app: express.Application = express();
 app.use(express.json());
 
 const corsOptions = {
-    origin: '*'
+    origin: process.env.ORIGIN
 };
 
 app.use(cors(corsOptions));
