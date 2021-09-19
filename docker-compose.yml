@@ -4,12 +4,14 @@ services:
   redis:
     image: redis
     mem_limit: 100M
+    restart: always
   postgres:
     image: postgres:latest
     environment:
-      POSTGRES_DB: guessrapp
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: REPLACEME
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: always
     volumes:
       - pgdata:/var/lib/postgresql/data:rw
     ports: # this can be removed after initial migrations
@@ -19,11 +21,11 @@ services:
     cpus: 0.75
     mem_limit: 400M
     environment:
-        - DATABASE_URL=REPLACEME
-        - REDIS_URL=REPLACEME
-        - SPOTIFY_CLIENT_ID=REPLACEME
-        - SPOTIFY_CLIENT_SECRET=REPLACEME
-        - ORIGIN=REPLACEME
+        - DATABASE_URL=${DATABASE_URL}
+        - REDIS_URL=${REDIS_URL}
+        - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+        - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+        - ORIGIN=${ORIGIN}
     depends_on:
       - redis
       - postgres
